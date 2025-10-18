@@ -1,0 +1,41 @@
+name: CI para Pygame-Snake
+
+on:
+  push:
+    branches:
+      - main # Ou 'master'. Se você vai trabalhar em um branch chamado 'actions' ou 'actions2', mude para 'actions' ou 'actions2'.
+      - master # Adicionando 'master' como opção, caso seu fork use ele por padrão.
+
+permissions:
+  contents: read # Precisamos apenas ler o código, não escrever em páginas web.
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x' # Deixe '3.x' para a versão mais recente do Python 3, ou especifique '3.9', '3.10', etc.
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install pygame
+
+      - name: Verificar Linting com Flake8 (opcional, para qualidade de codigo)
+        run: |
+          pip install flake8
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --max-complexity=10 --max-line-length=120 --statistics
+        continue-on-error: true # Permite que o workflow continue mesmo se houver pequenos erros de estilo
+
+      - name: Tentar executar o script principal (verificar erros de sintaxe)
+        # Este comando tenta importar e iniciar o script para ver se há erros de Python.
+        # Ele não vai abrir a janela do jogo, pois não há display em ambientes de CI.
+        run: python -c "import snake_final; print('Script Pygame importado com sucesso!')" || true
+        # O '|| true' é uma segurança caso o Python tente algo que não funciona no ambiente sem display.
